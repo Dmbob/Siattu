@@ -12,23 +12,15 @@ datasource db {
   provider = "sqlite"
 }
 
-model User {
-  id               String         @id @default(uuid())
-  firstName        String
-  lastName         String
-  username         String
-  password         String
-  providerConfig   ProviderConfig @relation(fields: [providerConfigId], references: [id])
-  providerConfigId String
-}
-
-model ProviderConfig {
-  id        String  @id @default(uuid())
+model ServiceProvider {
+  id        String     @id @default(uuid())
+  username  String     @unique
+  password  String
   firstName String
   lastName  String
-  address   Address @relation(fields: [addressId], references: [id])
+  address   Address    @relation(fields: [addressId], references: [id])
   addressId String
-  users     User[]
+  customers Customer[]
 }
 
 model TimeEntry {
@@ -51,22 +43,24 @@ model InvoiceEntry {
 }
 
 model Address {
-  id              String           @id @default(uuid())
-  street1         String
-  street2         String?
-  city            String
-  region          String
-  postalCode      String
-  customer        Customer?
-  providerConfigs ProviderConfig[]
+  id               String            @id @default(uuid())
+  street1          String
+  street2          String?
+  city             String
+  region           String
+  postalCode       String
+  customer         Customer?
+  serviceProviders ServiceProvider[]
 }
 
 model Customer {
-  id        String    @id @default(uuid())
-  name      String
-  addressId String    @unique
-  address   Address   @relation(fields: [addressId], references: [id])
-  invoices  Invoice[]
+  id                String          @id @default(uuid())
+  name              String
+  addressId         String          @unique
+  address           Address         @relation(fields: [addressId], references: [id])
+  invoices          Invoice[]
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId String
 }
 
 model Invoice {
