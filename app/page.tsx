@@ -1,8 +1,40 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
+import { ServiceProvider } from "./generated/prisma/client";
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      const data = fetch('/api/serviceProvider')
+      .then(r => r.json())
+      .then(data => {
+        console.log("Data", data);
+        if (data === null || data === undefined || data.length === 0) {
+          router.push('/setup');
+          return;
+        }
+
+        router.push('/api/auth/signin');
+      });
+    }
+  }, [status, router]);
+
+  if (status === "loading" || !session) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-    </div>
+    <main style={{ padding: "2rem" }}>
+      <p>Welcome back, <strong>{session.user?.name}</strong>!</p>
+      <button onClick={() => signOut()}>Sign out</button>
+    </main>
   );
+
 }
