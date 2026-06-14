@@ -1,5 +1,9 @@
 export default function Setup() {
     return (
-        <div>Setup here</div>
+        <div className="container">
+            <div className="card">
+                <div className="card-body"><button className="btn btn-primary">Test</button></div>
+            </div>
+        </div>
     );
 }
