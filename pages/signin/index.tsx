@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import AddressFields from '@/components/AddressFields';
+import { signIn } from 'next-auth/react';
 
-export default function Setup() {
+export default function SignIn() {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -17,15 +17,16 @@ export default function Setup() {
         setError(null);
         setLoading(true);
         try {
-            const res = await fetch('/api/setup', {
-                method: 'POST',
-                body: new FormData(e.currentTarget),
+            const formData = new FormData(e.currentTarget);
+            const result = await signIn('credentials', {
+                username: formData.get('username') as string,
+                password: formData.get('password') as string,
+                redirect: false,
             });
-            if (res.ok) {
-                router.push('/');
+            if (result?.error) {
+                setError('Invalid username or password.');
             } else {
-                const body = await res.json().catch(() => ({}));
-                setError(body.error?.message ?? 'Something went wrong.');
+                router.push('/');
             }
         } finally {
             setLoading(false);
@@ -36,31 +37,16 @@ export default function Setup() {
         <div className="min-vh-100 bg-light d-flex flex-column align-items-center justify-content-center py-5">
             <div className="mb-4 text-center">
                 <h2 className="fw-bold">Siattu</h2>
-                <p className="text-muted">Let's set up your instance</p>
+                <p className="text-muted">Sign in to your account</p>
             </div>
 
             <div className="card shadow-sm w-100 mx-3" style={{ maxWidth: "480px" }}>
                 <div className="card-header py-3">
-                    <h5 className="mb-0 fw-semibold">Provide Your Information</h5>
+                    <h5 className="mb-0 fw-semibold">Sign In</h5>
                 </div>
                 <div className="card-body p-3 p-sm-4">
                     <form onSubmit={handleSubmit} onChange={handleChange}>
                         {error && <div className="alert alert-danger py-2">{error}</div>}
-
-                        <div className="row g-3 mb-3">
-                            <div className="col-12 col-sm-6">
-                                <div className="form-floating">
-                                    <input id="firstName" name="firstName" className="form-control" type="text" placeholder="First Name" required />
-                                    <label htmlFor="firstName">First Name</label>
-                                </div>
-                            </div>
-                            <div className="col-12 col-sm-6">
-                                <div className="form-floating">
-                                    <input id="lastName" name="lastName" className="form-control" type="text" placeholder="Last Name" required />
-                                    <label htmlFor="lastName">Last Name</label>
-                                </div>
-                            </div>
-                        </div>
 
                         <div className="mb-3">
                             <div className="form-floating">
@@ -76,13 +62,8 @@ export default function Setup() {
                             </div>
                         </div>
 
-                        <hr className="my-4" />
-                        <h6 className="mb-3 fw-semibold">Address</h6>
-
-                        <AddressFields />
-
                         <button className="btn btn-primary w-100 mt-2" type="submit" disabled={loading || !isValid}>
-                            {loading ? 'Saving…' : 'Continue →'}
+                            {loading ? 'Signing in…' : 'Sign In →'}
                         </button>
                     </form>
                 </div>

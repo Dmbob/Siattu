@@ -3,8 +3,6 @@
 import { useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import useSWR from "swr";
-import { ServiceProvider } from "./generated/prisma/client";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -12,11 +10,10 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      const data = fetch('/api/serviceProvider')
+      fetch('/api/serviceProvider')
       .then(r => r.json())
       .then(data => {
-        console.log("Data", data);
-        if (data === null || data === undefined || data.length === 0) {
+        if (!data.data?.hasServiceProviders) {
           router.push('/setup');
           return;
         }

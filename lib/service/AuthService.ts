@@ -17,14 +17,12 @@ export class AuthService {
     }
 
     public async login(username: string, password: string): Promise<LoginUser | null> {
-        const pwHash = await AuthService.getPwHash(password);
-
-        const user = await this._sps.getByUsername(username, {id: true, username: true, firstName: true, lastName: true});
+        const user = await this._sps.getByUsername(username, {id: true, username: true, firstName: true, lastName: true, password: true});
 
         if (!user) return null;
 
-        if (user.password !== pwHash) return null;
-            
-        return user;
+        if (!await bcrypt.compare(password, user.password)) return null;
+
+        return { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName };
     }
 }
