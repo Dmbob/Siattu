@@ -14,25 +14,34 @@ const US_STATES = [
     ['WI', 'Wisconsin'], ['WY', 'Wyoming'], ['DC', 'District of Columbia'],
 ];
 
-interface AddressFieldsProps {
-    namePrefix?: string;
+interface AddressDefaults {
+    street1?: string;
+    street2?: string | null;
+    city?: string;
+    region?: string;
+    postalCode?: string;
 }
 
-export default function AddressFields({ namePrefix = '' }: AddressFieldsProps) {
+interface AddressFieldsProps {
+    namePrefix?: string;
+    defaults?: AddressDefaults;
+}
+
+export default function AddressFields({ namePrefix = '', defaults }: AddressFieldsProps) {
     const n = (field: string) => namePrefix ? `${namePrefix}.${field}` : field;
 
     return (
         <div>
             <div className="mb-3">
                 <div className="form-floating">
-                    <input id={n('street1')} name={n('street1')} className="form-control" type="text" placeholder="Street Address" required />
+                    <input id={n('street1')} name={n('street1')} className="form-control" type="text" placeholder="Street Address" defaultValue={defaults?.street1 ?? ''} required />
                     <label htmlFor={n('street1')}>Street Address</label>
                 </div>
             </div>
 
             <div className="mb-3">
                 <div className="form-floating">
-                    <input id={n('street2')} name={n('street2')} className="form-control" type="text" placeholder="Apt, Suite, etc." />
+                    <input id={n('street2')} name={n('street2')} className="form-control" type="text" placeholder="Apt, Suite, etc." defaultValue={defaults?.street2 ?? ''} />
                     <label htmlFor={n('street2')}>Apt, Suite, etc. (optional)</label>
                 </div>
             </div>
@@ -40,13 +49,13 @@ export default function AddressFields({ namePrefix = '' }: AddressFieldsProps) {
             <div className="row g-3 mb-3">
                 <div className="col-12 col-sm-6">
                     <div className="form-floating">
-                        <input id={n('city')} name={n('city')} className="form-control" type="text" placeholder="City" required />
+                        <input id={n('city')} name={n('city')} className="form-control" type="text" placeholder="City" defaultValue={defaults?.city ?? ''} required />
                         <label htmlFor={n('city')}>City</label>
                     </div>
                 </div>
                 <div className="col-12 col-sm-6">
                     <div className="form-floating">
-                        <select id={n('region')} name={n('region')} className="form-select" defaultValue="" required>
+                        <select id={n('region')} name={n('region')} className="form-select" defaultValue={defaults?.region ?? ''} required>
                             <option value="" disabled>State</option>
                             {US_STATES.map(([abbr, label]) => (
                                 <option key={abbr} value={abbr}>{label}</option>
@@ -59,7 +68,7 @@ export default function AddressFields({ namePrefix = '' }: AddressFieldsProps) {
 
             <div className="mb-3">
                 <div className="form-floating">
-                    <input id={n('postalCode')} name={n('postalCode')} className="form-control" type="text" placeholder="Postal Code" pattern="\d{5}(-\d{4})?" required />
+                    <input id={n('postalCode')} name={n('postalCode')} className="form-control" type="text" placeholder="Postal Code" pattern="\d{5}(-\d{4})?" defaultValue={defaults?.postalCode ?? ''} required />
                     <label htmlFor={n('postalCode')}>Postal Code</label>
                 </div>
             </div>

@@ -22,10 +22,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!loginUser) return null;
 
-        return { };
+        return {
+          id: loginUser.id,
+          name: `${loginUser.firstName} ${loginUser.lastName}`,
+        };
       }
     })
   ],
+  callbacks: {
+    // Enforces auth in proxy.ts (the matcher already excludes /setup, /api and
+    // static assets). Unauthenticated requests are redirected to the signIn page.
+    authorized({ auth }) {
+      return !!auth;
+    },
+    // Expose the service provider's id on the session for scoping data.
+    session({ session, token }) {
+      if (token.sub) session.user.id = token.sub;
+      return session;
+    },
+  },
   pages: {
     signIn: '/signin',
   },

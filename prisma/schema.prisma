@@ -23,23 +23,21 @@ model ServiceProvider {
   customers Customer[]
 }
 
-model TimeEntry {
+model InvoiceEntry {
   id          String    @id @default(uuid())
-  startTime   DateTime
+  startTime   DateTime?
   endTime     DateTime?
   description String
   amount      Int
-}
-
-model InvoiceEntry {
-  id          String   @id @default(uuid())
-  description String
-  amount      Int
-  quantity    Int      @default(1)
-  billed      Boolean  @default(false)
-  type        String   @default("bill")
-  invoice     Invoice? @relation(fields: [invoiceId], references: [id])
+  quantity    Float     @default(1)
+  billed      Boolean   @default(false)
+  type        String    @default("bill")
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  customerId  String
+  invoice     Invoice?  @relation(fields: [invoiceId], references: [id])
   invoiceId   String?
+  date        DateTime  @default(now())
+  createdAt   DateTime  @default(now())
 }
 
 model Address {
@@ -54,19 +52,43 @@ model Address {
 }
 
 model Customer {
-  id                String          @id @default(uuid())
-  name              String
-  addressId         String          @unique
-  address           Address         @relation(fields: [addressId], references: [id])
-  invoices          Invoice[]
-  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
-  serviceProviderId String
+  id                    String                 @id @default(uuid())
+  name                  String
+  addressId             String                 @unique
+  address               Address                @relation(fields: [addressId], references: [id])
+  invoices              Invoice[]
+  invoiceEntries        InvoiceEntry[]
+  schedules             InvoiceEntrySchedule[]
+  serviceProvider       ServiceProvider        @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId     String
+  startingInvoiceNumber Int                    @default(1)
+  defaultEntryAmount    Int                    @default(0)
 }
 
 model Invoice {
   id             String         @id @default(uuid())
-  customer       Customer?      @relation(fields: [customerId], references: [id])
-  customerId     String?
+  date           DateTime
+  invoiceNumber  Int
+  status         String         @default("open")
+  customer       Customer       @relation(fields: [customerId], references: [id])
+  customerId     String
   invoiceEntries InvoiceEntry[]
   fileLocation   String?
+  createdAt      DateTime       @default(now())
+
+  @@unique([customerId, invoiceNumber])
+}
+
+model InvoiceEntrySchedule {
+  id          String    @id @default(uuid())
+  cron        String
+  description String
+  amount      Int
+  quantity    Float     @default(1)
+  type        String    @default("bill")
+  active      Boolean   @default(true)
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  customerId  String
+  lastRunAt   DateTime?
+  createdAt   DateTime  @default(now())
 }

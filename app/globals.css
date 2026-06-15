@@ -1,26 +1,207 @@
-@import "tailwindcss";
+/*
+ * Global styles.
+ *
+ * Styling is Bootstrap (imported in app/layout.tsx) themed via its native CSS
+ * variables + data-bs-theme. Tailwind was removed: its JIT scanner generated
+ * utility classes that collide with Bootstrap component classes of the same name
+ * — most importantly `.collapse` (Tailwind emits `visibility: collapse`), which
+ * silently hid the navbar menu. Keep this file Tailwind-free.
+ *
+ * Palette: "Indigo Slate" — indigo primary on slate neutrals, amber timer
+ * accent. Light + dark are both defined here; the active one is selected by the
+ * `data-bs-theme` attribute on <html> (set pre-paint in layout.tsx, toggled by
+ * components/ThemeToggle.tsx, persisted to localStorage, system-aware on first
+ * visit).
+ */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================ Theme tokens ============================ */
+:root,
+[data-bs-theme="light"] {
+    --bs-primary: #4f46e5;
+    --bs-primary-rgb: 79, 70, 229;
+    --bs-link-color: #4f46e5;
+    --bs-link-color-rgb: 79, 70, 229;
+    --bs-link-hover-color: #4338ca;
+    --bs-link-hover-color-rgb: 67, 56, 202;
+
+    --bs-success: #16a34a; --bs-success-rgb: 22, 163, 74;
+    --bs-danger:  #dc2626; --bs-danger-rgb: 220, 38, 38;
+    --bs-warning: #f59e0b; --bs-warning-rgb: 245, 158, 11;
+    --bs-info:    #0ea5e9; --bs-info-rgb: 14, 165, 233;
+
+    --bs-body-bg: #f8fafc;
+    --bs-body-color: #0f172a;
+    --bs-body-color-rgb: 15, 23, 42;
+    --bs-secondary-color: rgba(15, 23, 42, 0.6);
+    --bs-tertiary-bg: #f1f5f9;
+    --bs-border-color: #e2e8f0;
+    --bs-emphasis-color: #0f172a;
+    --bs-border-radius: 0.625rem;
+
+    --app-surface: #ffffff;
+    --app-navbar-bg: #ffffff;
+    --app-navbar-border: #e2e8f0;
+    --app-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-bs-theme="dark"] {
+    --bs-primary: #818cf8;
+    --bs-primary-rgb: 129, 140, 248;
+    --bs-link-color: #a5b4fc;
+    --bs-link-color-rgb: 165, 180, 252;
+    --bs-link-hover-color: #c7d2fe;
+    --bs-link-hover-color-rgb: 199, 210, 254;
+
+    --bs-success: #34d399; --bs-success-rgb: 52, 211, 153;
+    --bs-danger:  #f87171; --bs-danger-rgb: 248, 113, 113;
+    --bs-warning: #fbbf24; --bs-warning-rgb: 251, 191, 36;
+    --bs-info:    #38bdf8; --bs-info-rgb: 56, 189, 248;
+
+    --bs-body-bg: #0b1220;
+    --bs-body-color: #e2e8f0;
+    --bs-body-color-rgb: 226, 232, 240;
+    --bs-secondary-color: rgba(226, 232, 240, 0.65);
+    --bs-tertiary-bg: #111a2e;
+    --bs-border-color: #24314d;
+    --bs-emphasis-color: #f8fafc;
+
+    --app-surface: #111a2e;
+    --app-navbar-bg: #0e1626;
+    --app-navbar-border: #24314d;
+    --app-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ============================ Typography ============================ */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    /* Fallback lives inside var() so an undefined font variable degrades to the
+       system sans stack instead of invalidating the whole declaration (which
+       would fall back to the browser's default serif). */
+    font-family: var(--font-geist-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+}
+code, kbd, .font-monospace {
+    font-family: var(--font-geist-mono, ui-monospace, SFMono-Regular, Menlo, monospace) !important;
+}
+
+/* ============================ Surfaces ============================ */
+.card {
+    --bs-card-bg: var(--app-surface);
+    --bs-card-border-color: var(--bs-border-color);
+    --bs-card-border-radius: 0.75rem;
+    box-shadow: var(--app-shadow);
+}
+.shadow-sm { box-shadow: var(--app-shadow) !important; }
+
+/* nav-tabs panel surfaces (customer detail uses bg-white directly) */
+.bg-white { background-color: var(--app-surface) !important; }
+
+/* ============================ Buttons ============================ */
+/* Bootstrap compiles per-variant button colors as literals, so recolor the
+   button-local CSS vars rather than relying on --bs-primary alone. */
+.btn-primary {
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: #4338ca;
+    --bs-btn-hover-border-color: #3730a3;
+    --bs-btn-active-bg: #3730a3;
+    --bs-btn-active-border-color: #312e81;
+    --bs-btn-disabled-bg: var(--bs-primary);
+    --bs-btn-disabled-border-color: var(--bs-primary);
+    --bs-btn-color: #fff;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-active-color: #fff;
+    --bs-btn-disabled-color: #fff;
+}
+[data-bs-theme="dark"] .btn-primary {
+    --bs-btn-hover-bg: #6366f1;
+    --bs-btn-hover-border-color: #6366f1;
+    --bs-btn-active-bg: #6366f1;
+    --bs-btn-active-border-color: #6366f1;
+    --bs-btn-color: #0b1220;
+    --bs-btn-hover-color: #0b1220;
+    --bs-btn-active-color: #0b1220;
+    --bs-btn-disabled-color: #0b1220;
+}
+.btn-outline-primary {
+    --bs-btn-color: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-active-bg: var(--bs-primary);
+    --bs-btn-active-border-color: var(--bs-primary);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-active-color: #fff;
+}
+[data-bs-theme="dark"] .btn-outline-primary {
+    --bs-btn-hover-color: #0b1220;
+    --bs-btn-active-color: #0b1220;
+}
+.btn-link { --bs-btn-color: var(--bs-link-color); --bs-btn-hover-color: var(--bs-link-hover-color); }
+
+/* ============================ Forms ============================ */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: rgba(var(--bs-primary-rgb), 0.55);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.2);
+}
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* ============================ Tables ============================ */
+.table {
+    --bs-table-border-color: var(--bs-border-color);
+}
+.table > thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+    border-bottom-color: var(--bs-border-color);
+}
+
+/* ============================ Navbar ============================ */
+.app-navbar {
+    background-color: var(--app-navbar-bg);
+    border-bottom: 1px solid var(--app-navbar-border);
+}
+.app-navbar .navbar-brand {
+    color: var(--bs-primary);
+    letter-spacing: -0.01em;
+}
+.app-navbar .nav-link {
+    color: var(--bs-body-color);
+    font-weight: 500;
+    border-radius: 0.5rem;
+    padding-inline: 0.75rem;
+}
+.app-navbar .nav-link:hover {
+    color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.08);
+}
+.app-navbar .nav-link.active {
+    color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+/* ============================ Tabs (customer detail) ============================ */
+/* Keep the active tab and the panel below it on the same surface so they merge,
+   and use themed borders. The panel uses `bg-white` (mapped to --app-surface). */
+.nav-tabs {
+    --bs-nav-tabs-border-color: var(--bs-border-color);
+    --bs-nav-tabs-link-hover-border-color: var(--bs-border-color) var(--bs-border-color) var(--bs-border-color);
+    --bs-nav-tabs-link-active-bg: var(--app-surface);
+    --bs-nav-tabs-link-active-border-color: var(--bs-border-color) var(--bs-border-color) var(--app-surface);
+}
+.nav-tabs .nav-link {
+    color: var(--bs-secondary-color);
+}
+.nav-tabs .nav-link:hover {
+    color: var(--bs-primary);
+}
+.nav-tabs .nav-link.active {
+    color: var(--bs-primary);
+    font-weight: 600;
 }
