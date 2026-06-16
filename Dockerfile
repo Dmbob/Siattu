@@ -11,6 +11,11 @@ RUN npm install --force
 
 COPY . .
 
+# Placeholder values so prisma.config.ts and NextAuth don't throw during build.
+# These are ARG (not ENV) so they don't persist into the final image.
+ARG DATABASE_URL=file:/data/data.db
+ARG AUTH_SECRET=build-placeholder
+
 RUN npx prisma generate
 RUN npm run build
 
