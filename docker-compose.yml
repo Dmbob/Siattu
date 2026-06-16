@@ -1,0 +1,12 @@
+services:
+  app:
+    image: dmbob/siattu:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+    environment:
+      DATABASE_URL: file:/data/data.db
+      AUTH_SECRET: changeme
+      NEXTAUTH_URL: http://localhost:3000
+    restart: unless-stopped
