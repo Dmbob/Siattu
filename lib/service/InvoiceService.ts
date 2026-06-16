@@ -24,6 +24,8 @@ export interface InvoiceDetailEntry {
     date: Date;
     startTime: Date | null;
     endTime: Date | null;
+    invoiceGroupId: string | null;
+    invoiceGroupLabel: string | null; // group description snapshotted at invoice creation
 }
 
 /** Everything needed to render an invoice page or PDF. */
@@ -109,7 +111,7 @@ export class InvoiceService implements Service<Invoice> {
 
             const entries = await tx.invoiceEntry.findMany({
                 where: { id: { in: entryIds }, customerId, invoiceId: null },
-                select: { id: true, startTime: true, endTime: true },
+                select: { id: true, startTime: true, endTime: true, invoiceGroupId: true },
             });
             if (entries.length !== entryIds.length) {
                 throw new Error('Some selected entries are no longer available to invoice.');
@@ -132,6 +134,22 @@ export class InvoiceService implements Service<Invoice> {
                 where: { id: { in: entries.map((e) => e.id) } },
                 data: { invoiceId: invoice.id, billed: true },
             });
+
+            // Freeze each grouped entry's label so renaming a group later never
+            // alters this invoice (snapshot at issue time).
+            const groupIds = [...new Set(entries.map((e) => e.invoiceGroupId).filter((id): id is string => !!id))];
+            if (groupIds.length > 0) {
+                const groups = await tx.invoiceGroup.findMany({
+                    where: { id: { in: groupIds } },
+                    select: { id: true, invoiceDescription: true },
+                });
+                for (const g of groups) {
+                    await tx.invoiceEntry.updateMany({
+                        where: { id: { in: entries.filter((e) => e.invoiceGroupId === g.id).map((e) => e.id) } },
+                        data: { invoiceGroupLabel: g.invoiceDescription },
+                    });
+                }
+            }
             return invoice;
         });
     }
@@ -187,6 +205,7 @@ export class InvoiceService implements Service<Invoice> {
                     select: {
                         id: true, description: true, type: true, quantity: true,
                         amount: true, date: true, startTime: true, endTime: true,
+                        invoiceGroupId: true, invoiceGroupLabel: true,
                     },
                     orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
                 },

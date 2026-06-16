@@ -3,6 +3,7 @@ import { CustomerService } from "@/lib/service/CustomerService";
 import { InvoiceEntryService } from "@/lib/service/InvoiceEntryService";
 import { InvoiceService } from "@/lib/service/InvoiceService";
 import { InvoiceEntryScheduleService } from "@/lib/service/InvoiceEntryScheduleService";
+import { InvoiceGroupService } from "@/lib/service/InvoiceGroupService";
 import CustomerTabs from "@/components/CustomerTabs";
 import EditCustomerButton from "@/components/EditCustomerButton";
 
@@ -11,10 +12,11 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
     const customer = await new CustomerService().getWithAddress(id);
     if (!customer) notFound();
 
-    const [entries, invoices, schedules] = await Promise.all([
+    const [entries, invoices, schedules, groups] = await Promise.all([
         new InvoiceEntryService().listWithCustomer(id),
         new InvoiceService().listForCustomer(id),
         new InvoiceEntryScheduleService().listForCustomer(id),
+        new InvoiceGroupService().listForCustomer(id),
     ]);
 
     const { address } = customer;
@@ -55,6 +57,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                 entries={entries}
                 invoices={invoices}
                 schedules={schedules}
+                groups={groups}
                 startingInvoiceNumber={customer.startingInvoiceNumber}
                 defaultEntryAmount={customer.defaultEntryAmount}
             />

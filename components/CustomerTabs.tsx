@@ -5,12 +5,15 @@ import CustomerSettingsForm from "@/components/CustomerSettingsForm";
 import InvoiceEntryTable from "@/components/InvoiceEntryTable";
 import CustomerInvoices from "@/components/CustomerInvoices";
 import CustomerSchedules from "@/components/CustomerSchedules";
+import CustomerInvoiceGroups from "@/components/CustomerInvoiceGroups";
 import type { InvoiceEntryListItem } from "@/lib/models/InvoiceEntry";
 import type { InvoiceListRow } from "@/lib/service/InvoiceService";
 import type { ScheduleListItem } from "@/lib/models/InvoiceEntrySchedule";
+import type { InvoiceGroupListItem } from "@/lib/models/InvoiceGroup";
 
 const TABS = [
     { id: "entries", label: "Invoice Entries" },
+    { id: "groups", label: "Invoice Groups" },
     { id: "invoices", label: "Invoices" },
     { id: "settings", label: "Settings" },
     { id: "schedules", label: "Scheduled Entries" },
@@ -24,11 +27,12 @@ interface Props {
     entries: InvoiceEntryListItem[];
     invoices: InvoiceListRow[];
     schedules: ScheduleListItem[];
+    groups: InvoiceGroupListItem[];
     startingInvoiceNumber: number;
     defaultEntryAmount: number;
 }
 
-export default function CustomerTabs({ customerId, customerName, entries, invoices, schedules, startingInvoiceNumber, defaultEntryAmount }: Props) {
+export default function CustomerTabs({ customerId, customerName, entries, invoices, schedules, groups, startingInvoiceNumber, defaultEntryAmount }: Props) {
     const [active, setActive] = useState<TabId>("entries");
 
     return (
@@ -53,6 +57,9 @@ export default function CustomerTabs({ customerId, customerName, entries, invoic
                         entries={entries}
                         fixedCustomer={{ id: customerId, name: customerName, defaultEntryAmount }}
                     />
+                )}
+                {active === "groups" && (
+                    <CustomerInvoiceGroups customerId={customerId} groups={groups} />
                 )}
                 {active === "invoices" && (
                     <CustomerInvoices customerId={customerId} invoices={invoices} entries={entries} />

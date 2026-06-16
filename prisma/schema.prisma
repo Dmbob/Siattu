@@ -36,6 +36,11 @@ model InvoiceEntry {
   customerId  String
   invoice     Invoice?  @relation(fields: [invoiceId], references: [id])
   invoiceId   String?
+  invoiceGroup   InvoiceGroup? @relation(fields: [invoiceGroupId], references: [id])
+  invoiceGroupId String?
+  // Snapshot of the group's invoiceDescription, frozen onto the entry when it is
+  // billed onto an invoice so later edits to the group don't alter past invoices.
+  invoiceGroupLabel String?
   date        DateTime  @default(now())
   createdAt   DateTime  @default(now())
 }
@@ -58,6 +63,7 @@ model Customer {
   address               Address                @relation(fields: [addressId], references: [id])
   invoices              Invoice[]
   invoiceEntries        InvoiceEntry[]
+  invoiceGroups         InvoiceGroup[]
   schedules             InvoiceEntrySchedule[]
   serviceProvider       ServiceProvider        @relation(fields: [serviceProviderId], references: [id])
   serviceProviderId     String
@@ -89,6 +95,19 @@ model InvoiceEntrySchedule {
   active      Boolean   @default(true)
   customer    Customer  @relation(fields: [customerId], references: [id])
   customerId  String
+  invoiceGroup   InvoiceGroup? @relation(fields: [invoiceGroupId], references: [id])
+  invoiceGroupId String?
   lastRunAt   DateTime?
   createdAt   DateTime  @default(now())
+}
+
+model InvoiceGroup {
+  id                 String                 @id @default(uuid())
+  name               String
+  invoiceDescription String
+  customer           Customer               @relation(fields: [customerId], references: [id])
+  customerId         String
+  entries            InvoiceEntry[]
+  schedules          InvoiceEntrySchedule[]
+  createdAt          DateTime               @default(now())
 }

@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { formatUSD } from '@/lib/money';
-import { entryLineTotal, sumEntryLineTotals } from '@/lib/models/InvoiceEntry';
+import { sumEntryLineTotals } from '@/lib/models/InvoiceEntry';
+import { collapseEntriesIntoInvoiceLines } from '@/lib/models/InvoiceGroup';
 import type { InvoiceDetail, InvoiceDetailEntry } from '@/lib/service/InvoiceService';
 
 const styles = StyleSheet.create({
@@ -65,12 +66,12 @@ function EntrySection({ title, entries }: { title: string; entries: InvoiceDetai
                 <Text style={styles.cRate}>Rate</Text>
                 <Text style={styles.cAmt}>Amount</Text>
             </View>
-            {entries.map((e) => (
-                <View style={styles.row} key={e.id}>
-                    <Text style={styles.cDesc}>{e.description}</Text>
-                    <Text style={styles.cQty}>{e.startTime ? `${e.quantity} h` : e.quantity}</Text>
-                    <Text style={styles.cRate}>{formatUSD(e.amount)}</Text>
-                    <Text style={styles.cAmt}>{formatUSD(entryLineTotal(e))}</Text>
+            {collapseEntriesIntoInvoiceLines(entries).map((line) => (
+                <View style={styles.row} key={line.key}>
+                    <Text style={styles.cDesc}>{line.description}</Text>
+                    <Text style={styles.cQty}>{line.quantityIsHours ? `${line.quantity} h` : line.quantity}</Text>
+                    <Text style={styles.cRate}>{line.rateDisplay}</Text>
+                    <Text style={styles.cAmt}>{formatUSD(line.amount)}</Text>
                 </View>
             ))}
             <View style={styles.totalRow}>

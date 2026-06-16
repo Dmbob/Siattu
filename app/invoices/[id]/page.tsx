@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { InvoiceService } from "@/lib/service/InvoiceService";
 import { formatUSD } from "@/lib/money";
-import { entryLineTotal, sumEntryLineTotals } from "@/lib/models/InvoiceEntry";
+import { sumEntryLineTotals } from "@/lib/models/InvoiceEntry";
+import { collapseEntriesIntoInvoiceLines } from "@/lib/models/InvoiceGroup";
 import { formatHours } from "@/lib/time";
 import type { InvoiceDetailEntry } from "@/lib/service/InvoiceService";
 import InvoiceStatusButton from "@/components/InvoiceStatusButton";
@@ -30,13 +31,17 @@ function EntrySection({ title, entries }: { title: string; entries: InvoiceDetai
                         </tr>
                     </thead>
                     <tbody>
-                        {entries.map((e) => (
-                            <tr key={e.id}>
-                                <td className="text-nowrap">{fmtDate(e.date)}</td>
-                                <td>{e.description}</td>
-                                <td className="text-end">{e.startTime ? formatHours(e.quantity) : e.quantity}</td>
-                                <td className="text-end">{formatUSD(e.amount)}</td>
-                                <td className="text-end">{formatUSD(entryLineTotal(e))}</td>
+                        {collapseEntriesIntoInvoiceLines(entries).map((line) => (
+                            <tr key={line.key}>
+                                <td className="text-nowrap">
+                                    {line.dateStart.getTime() === line.dateEnd.getTime()
+                                        ? fmtDate(line.dateStart)
+                                        : `${fmtDate(line.dateStart)} – ${fmtDate(line.dateEnd)}`}
+                                </td>
+                                <td>{line.description}</td>
+                                <td className="text-end">{line.quantityIsHours ? formatHours(line.quantity) : line.quantity}</td>
+                                <td className="text-end" style={{ whiteSpace: "pre-line" }}>{line.rateDisplay}</td>
+                                <td className="text-end">{formatUSD(line.amount)}</td>
                             </tr>
                         ))}
                     </tbody>

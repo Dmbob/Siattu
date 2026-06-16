@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Modal from "@/components/Modal";
 import CronField from "@/components/CronField";
+import InvoiceGroupTypeahead from "@/components/InvoiceGroupTypeahead";
 import { centsToDollars, dollarsToCents, formatUSD } from "@/lib/money";
 import type { ScheduleListItem } from "@/lib/models/InvoiceEntrySchedule";
 
@@ -21,6 +22,8 @@ export default function ScheduleFormModal({ customerId, initial, onClose, onSave
     const [amount, setAmount] = useState(initial ? centsToDollars(initial.amount).toFixed(2) : "0.00");
     const [cron, setCron] = useState(initial?.cron ?? "0 9 1 * *");
     const [active, setActive] = useState(initial?.active ?? true);
+    const [groupId, setGroupId] = useState<string | null>(initial?.invoiceGroup?.id ?? null);
+    const [groupName, setGroupName] = useState<string | null>(initial?.invoiceGroup?.name ?? null);
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
@@ -38,6 +41,7 @@ export default function ScheduleFormModal({ customerId, initial, onClose, onSave
             amount: dollarsToCents(amount),
             cron: cron.trim(),
             active,
+            invoiceGroupId: groupId,
         };
         try {
             const res = await fetch(editing ? `/api/schedules/${initial!.id}` : "/api/schedules", {
@@ -60,6 +64,16 @@ export default function ScheduleFormModal({ customerId, initial, onClose, onSave
                 <div className="mb-3">
                     <label htmlFor="sched-description" className="form-label fw-semibold">Description</label>
                     <input id="sched-description" className="form-control" value={description} onChange={(e) => setDescription(e.target.value)} required />
+                </div>
+
+                <div className="mb-3">
+                    <label className="form-label fw-semibold">Invoice Group <span className="text-muted fw-normal">(optional)</span></label>
+                    <InvoiceGroupTypeahead
+                        customerId={customerId}
+                        selectedName={groupName ?? undefined}
+                        onSelect={(g) => { setGroupId(g?.id ?? null); setGroupName(g?.name ?? null); }}
+                    />
+                    <div className="form-text">Entries this schedule creates collapse into one line on the invoice.</div>
                 </div>
 
                 <div className="row g-3 mb-3">

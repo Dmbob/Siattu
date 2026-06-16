@@ -140,3 +140,25 @@ Committed, repo-local memory for this project. Loaded each session via the
   (PATCH/DELETE), ownership-scoped. The entry form's **"Make recurring"** option
   (new + non-timed only) creates the entry then POSTs a schedule. `CronField`
   (preset picker) is shared by the schedule modal and the entry form.
+- **Invoice groups** (`InvoiceGroup` = `name` + `invoiceDescription`, customer-scoped).
+  Entries and schedules carry an optional **`invoiceGroupId`**; a chosen group must
+  belong to the **same customer** (services assert this). On an invoice, entries
+  sharing a group **collapse to one line _within each type section_** (Billable Work /
+  Software/Licenses stay separate) via the shared
+  **`collapseEntriesIntoInvoiceLines`** + **`formatGroupRate`** in
+  `lib/models/InvoiceGroup.ts` — used by **both** the on-screen invoice and the PDF
+  (DRY). Collapsed line = group description, **summed Qty**, **summed Amount**, and a
+  smart **Rate**: one rate shows plainly (`$10.00`), mixed rates show the
+  **summed quantity** billed at each rate (`qty @ rate`, e.g. `2.5 @ $5.00` — not a
+  count of entries) highest-first, **one per line** (newline-joined — react-pdf
+  honors `\n`; the on-screen cell uses `white-space: pre-line`). The label is
+  **snapshotted** onto each entry (`InvoiceEntry.invoiceGroupLabel`) in
+  `InvoiceService.createFromEntries`, so renaming/editing a group never alters issued
+  invoices. **Deletion is blocked whenever _anything_ references the group** (any
+  entry — billed or not — or any schedule; enforced in `InvoiceGroupService.remove`,
+  returns 409), so a group used on a past invoice stays undeletable (rename still
+  works). CRUD: **`/api/invoice-groups`** (GET search by `customerId`+`q`, POST) +
+  **`/api/invoice-groups/[id]`** (PATCH/DELETE). UI: an **Invoice Groups** customer
+  tab (`CustomerInvoiceGroups`), and a customer-scoped **`InvoiceGroupTypeahead`**
+  (mirrors `CustomerTypeahead`, with a "No group" option) on the entry + schedule
+  forms — remount it via `key={customerId}` so changing customer clears the picker.

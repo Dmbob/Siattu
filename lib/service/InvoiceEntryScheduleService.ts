@@ -25,12 +25,14 @@ export class InvoiceEntryScheduleService implements Service<InvoiceEntrySchedule
             select: {
                 id: true, description: true, type: true, quantity: true, amount: true,
                 cron: true, active: true, lastRunAt: true, createdAt: true,
+                invoiceGroup: { select: { id: true, name: true } },
             },
         });
     }
 
     async create(serviceProviderId: string, input: ScheduleInput): Promise<InvoiceEntrySchedule> {
         await this.assertOwnsCustomer(serviceProviderId, input.customerId);
+        await this.assertGroupMatchesCustomer(input.invoiceGroupId, input.customerId);
         return await prisma.invoiceEntrySchedule.create({
             data: {
                 customerId: input.customerId,
@@ -40,12 +42,14 @@ export class InvoiceEntryScheduleService implements Service<InvoiceEntrySchedule
                 amount: input.amount,
                 cron: input.cron,
                 active: input.active,
+                invoiceGroupId: input.invoiceGroupId,
             },
         });
     }
 
     async update(serviceProviderId: string, id: string, input: ScheduleInput): Promise<void> {
-        await this.assertOwnsSchedule(serviceProviderId, id);
+        const customerId = await this.assertOwnsSchedule(serviceProviderId, id);
+        await this.assertGroupMatchesCustomer(input.invoiceGroupId, customerId);
         await prisma.invoiceEntrySchedule.update({
             where: { id },
             data: {
@@ -55,6 +59,7 @@ export class InvoiceEntryScheduleService implements Service<InvoiceEntrySchedule
                 amount: input.amount,
                 cron: input.cron,
                 active: input.active,
+                invoiceGroupId: input.invoiceGroupId,
             },
         });
     }
@@ -76,6 +81,7 @@ export class InvoiceEntryScheduleService implements Service<InvoiceEntrySchedule
             select: {
                 id: true, customerId: true, description: true, type: true,
                 quantity: true, amount: true, cron: true, lastRunAt: true, createdAt: true,
+                invoiceGroupId: true,
             },
         });
 
@@ -94,6 +100,7 @@ export class InvoiceEntryScheduleService implements Service<InvoiceEntrySchedule
                                 amount: s.amount,
                                 quantity: s.quantity,
                                 date: now,
+                                invoiceGroupId: s.invoiceGroupId,
                             },
                         }),
                         prisma.invoiceEntrySchedule.update({ where: { id: s.id }, data: { lastRunAt: now } }),
@@ -115,11 +122,23 @@ export class InvoiceEntryScheduleService implements Service<InvoiceEntrySchedule
         if (!customer) throw new Error('Customer not found.');
     }
 
-    private async assertOwnsSchedule(serviceProviderId: string, id: string): Promise<void> {
+    /** Confirms ownership and returns the schedule's (immutable) customer id. */
+    private async assertOwnsSchedule(serviceProviderId: string, id: string): Promise<string> {
         const schedule = await prisma.invoiceEntrySchedule.findFirst({
             where: { id, customer: { serviceProviderId } },
-            select: { id: true },
+            select: { customerId: true },
         });
         if (!schedule) throw new Error('Schedule not found.');
+        return schedule.customerId;
+    }
+
+    /** A chosen group must belong to the same customer the schedule is filed under. */
+    private async assertGroupMatchesCustomer(invoiceGroupId: string | null, customerId: string): Promise<void> {
+        if (!invoiceGroupId) return;
+        const group = await prisma.invoiceGroup.findFirst({
+            where: { id: invoiceGroupId, customerId },
+            select: { id: true },
+        });
+        if (!group) throw new Error('Invoice group not found.');
     }
 }

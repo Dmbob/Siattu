@@ -11,6 +11,7 @@ export interface ScheduleListItem {
     active: boolean;
     lastRunAt: Date | null;
     createdAt: Date;
+    invoiceGroup: { id: string; name: string } | null;
 }
 
 export interface ScheduleInput {
@@ -21,6 +22,7 @@ export interface ScheduleInput {
     amount: number; // per-unit cents
     cron: string;
     active: boolean;
+    invoiceGroupId: string | null;
 }
 
 const TYPES = ['bill', 'software'];
@@ -41,6 +43,7 @@ export function parseScheduleInput(
     const amount = Number(body.amount);
     const cron = typeof body.cron === 'string' ? body.cron.trim() : '';
     const active = body.active === undefined ? true : body.active === true;
+    const invoiceGroupId = typeof body.invoiceGroupId === 'string' && body.invoiceGroupId.trim() ? body.invoiceGroupId.trim() : null;
 
     if ((opts.requireCustomer ?? true) && !customerId) return { input: null, error: 'A customer is required.' };
     if (!description) return { input: null, error: 'A description is required.' };
@@ -49,5 +52,5 @@ export function parseScheduleInput(
     if (!Number.isInteger(amount) || amount < 0) return { input: null, error: 'Amount must be a non-negative number of cents.' };
     if (!isValidCron(cron)) return { input: null, error: 'Enter a valid cron expression (e.g. "0 9 1 * *").' };
 
-    return { input: { customerId, description, type, quantity, amount, cron, active } };
+    return { input: { customerId, description, type, quantity, amount, cron, active, invoiceGroupId } };
 }

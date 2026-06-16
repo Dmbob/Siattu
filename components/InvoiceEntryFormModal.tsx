@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Modal from "@/components/Modal";
 import CustomerTypeahead from "@/components/CustomerTypeahead";
+import InvoiceGroupTypeahead from "@/components/InvoiceGroupTypeahead";
 import CronField from "@/components/CronField";
 import { centsToDollars, dollarsToCents, formatUSD } from "@/lib/money";
 import { halfHourOptions, hoursBetween, billableHalfHours, formatHours } from "@/lib/time";
@@ -21,6 +22,8 @@ export interface EntryFormValues {
     amount: number; // hourly rate when timed, else the line total
     startTime: string | null;
     endTime: string | null;
+    invoiceGroupId: string | null;
+    invoiceGroupName: string | null;
 }
 
 interface Props {
@@ -60,6 +63,8 @@ export default function InvoiceEntryFormModal({ onClose, onSaved, fixedCustomer,
     const [endT, setEndT] = useState(initial?.endTime ? halfHourStr(initial.endTime) : "");
     const [quantity, setQuantity] = useState(String(initial && !initial.startTime ? initial.quantity : 1));
     const [amount, setAmount] = useState(initial ? centsToDollars(initial.amount).toFixed(2) : "0.00");
+    const [groupId, setGroupId] = useState<string | null>(initial?.invoiceGroupId ?? null);
+    const [groupName, setGroupName] = useState<string | null>(initial?.invoiceGroupName ?? null);
     const [recurring, setRecurring] = useState(false);
     const [cron, setCron] = useState("0 9 1 * *");
     const [error, setError] = useState<string | null>(null);
@@ -74,6 +79,9 @@ export default function InvoiceEntryFormModal({ onClose, onSaved, fixedCustomer,
 
     function pickCustomer(c: Customer) {
         setCustomer(c);
+        // Groups are customer-scoped — a new customer invalidates the prior choice.
+        setGroupId(null);
+        setGroupName(null);
         if (trackTime) setAmount(centsToDollars(c.defaultEntryAmount).toFixed(2));
     }
     function toggleTrack(checked: boolean) {
@@ -102,10 +110,12 @@ export default function InvoiceEntryFormModal({ onClose, onSaved, fixedCustomer,
                 amount: rateCents,
                 startTime: startDate!.toISOString(),
                 endTime: endDate ? endDate.toISOString() : null,
+                invoiceGroupId: groupId,
             }
             : {
                 customerId: customer.id, description, type, date, trackTime: false,
                 quantity: Number(quantity), amount: dollarsToCents(amount),
+                invoiceGroupId: groupId,
             };
         try {
             if (!entryDone) {
@@ -128,7 +138,7 @@ export default function InvoiceEntryFormModal({ onClose, onSaved, fixedCustomer,
                     body: JSON.stringify({
                         customerId: customer.id, description, type,
                         quantity: Number(quantity), amount: dollarsToCents(amount),
-                        cron: cron.trim(), active: true,
+                        cron: cron.trim(), active: true, invoiceGroupId: groupId,
                     }),
                 });
                 if (!sres.ok) {
@@ -160,6 +170,17 @@ export default function InvoiceEntryFormModal({ onClose, onSaved, fixedCustomer,
                 <div className="mb-3">
                     <label htmlFor="entry-description" className="form-label fw-semibold">Description</label>
                     <input id="entry-description" className="form-control" value={description} onChange={(e) => setDescription(e.target.value)} required />
+                </div>
+
+                <div className="mb-3">
+                    <label className="form-label fw-semibold">Invoice Group <span className="text-muted fw-normal">(optional)</span></label>
+                    <InvoiceGroupTypeahead
+                        key={customer?.id ?? "none"}
+                        customerId={customer?.id ?? null}
+                        selectedName={groupName ?? undefined}
+                        onSelect={(g) => { setGroupId(g?.id ?? null); setGroupName(g?.name ?? null); }}
+                    />
+                    <div className="form-text">Grouped entries collapse into one line on the invoice.</div>
                 </div>
 
                 <div className="row g-3 mb-3">

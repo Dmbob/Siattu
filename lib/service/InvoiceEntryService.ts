@@ -34,11 +34,13 @@ export class InvoiceEntryService implements Service<InvoiceEntry> {
                 id: true, description: true, type: true, quantity: true, amount: true,
                 billed: true, date: true, startTime: true, endTime: true, createdAt: true,
                 customer: { select: { id: true, name: true, defaultEntryAmount: true } },
+                invoiceGroup: { select: { id: true, name: true } },
             },
         });
     }
 
     async createEntry(input: InvoiceEntryInput): Promise<InvoiceEntry> {
+        await this.assertGroupMatchesCustomer(input.invoiceGroupId, input.customerId);
         const data = this.resolve(input);
         if (data.startTime && !data.endTime) await this.assertNoOtherOpenTimer();
         return await prisma.invoiceEntry.create({ data });
@@ -48,6 +50,7 @@ export class InvoiceEntryService implements Service<InvoiceEntry> {
         const existing = await prisma.invoiceEntry.findUnique({ where: { id }, select: { billed: true } });
         if (!existing) throw new Error('Entry not found.');
         if (existing.billed) throw new Error('A billed entry cannot be edited.');
+        await this.assertGroupMatchesCustomer(input.invoiceGroupId, input.customerId);
         const data = this.resolve(input);
         if (data.startTime && !data.endTime) await this.assertNoOtherOpenTimer(id);
         return await prisma.invoiceEntry.update({ where: { id }, data });
@@ -59,7 +62,10 @@ export class InvoiceEntryService implements Service<InvoiceEntry> {
      * or the line total (non-timed) exactly as supplied.
      */
     private resolve(input: InvoiceEntryInput) {
-        const base = { customerId: input.customerId, description: input.description, type: input.type, date: input.date };
+        const base = {
+            customerId: input.customerId, description: input.description, type: input.type,
+            date: input.date, invoiceGroupId: input.invoiceGroupId,
+        };
         if (input.startTime && input.endTime) {
             const quantity = billableHalfHours(hoursBetween(input.startTime, input.endTime));
             return { ...base, startTime: input.startTime, endTime: input.endTime, quantity, amount: input.amount };
@@ -68,6 +74,16 @@ export class InvoiceEntryService implements Service<InvoiceEntry> {
             return { ...base, startTime: input.startTime, endTime: null, quantity: 0, amount: input.amount };
         }
         return { ...base, startTime: null, endTime: null, quantity: input.quantity, amount: input.amount };
+    }
+
+    /** A chosen group must belong to the same customer the entry is filed under. */
+    private async assertGroupMatchesCustomer(invoiceGroupId: string | null, customerId: string) {
+        if (!invoiceGroupId) return;
+        const group = await prisma.invoiceGroup.findFirst({
+            where: { id: invoiceGroupId, customerId },
+            select: { id: true },
+        });
+        if (!group) throw new Error('Invoice group not found.');
     }
 
     private async assertNoOtherOpenTimer(excludeId?: string) {

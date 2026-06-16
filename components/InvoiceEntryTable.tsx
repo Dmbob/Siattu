@@ -39,6 +39,8 @@ export default function InvoiceEntryTable({ entries, fixedCustomer }: Props) {
                 amount: e.amount,
                 startTime: e.startTime ? new Date(e.startTime).toISOString() : null,
                 endTime: e.endTime ? new Date(e.endTime).toISOString() : null,
+                invoiceGroupId: e.invoiceGroup?.id ?? null,
+                invoiceGroupName: e.invoiceGroup?.name ?? null,
             },
         });
     }
@@ -81,6 +83,7 @@ export default function InvoiceEntryTable({ entries, fixedCustomer }: Props) {
                                 <th>Date</th>
                                 {showCustomer && <th>Customer</th>}
                                 <th>Description</th>
+                                <th>Group</th>
                                 <th>Type</th>
                                 <th className="text-end">Qty</th>
                                 <th className="text-end">Amount</th>
@@ -100,6 +103,7 @@ export default function InvoiceEntryTable({ entries, fixedCustomer }: Props) {
                                         </td>
                                     )}
                                     <td>{e.description}</td>
+                                    <td>{e.invoiceGroup ? e.invoiceGroup.name : <span className="text-muted">—</span>}</td>
                                     <td>{e.type === "software" ? "Software" : "Billable"}</td>
                                     <td className="text-end">{formatQty(e.quantity)}</td>
                                     <td className="text-end">{formatUSD(entryLineTotal(e))}</td>

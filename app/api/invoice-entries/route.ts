@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
         return apiSuccess({ id: entry.id }, 201);
     } catch (err) {
         if (err instanceof Error && err.message.includes("already running")) return apiError(err.message, 409);
+        if (err instanceof Error && err.message.includes("not found")) return apiError(err.message, 404);
         console.error(err);
         return apiError("Something went wrong.");
     }

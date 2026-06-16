@@ -10,6 +10,7 @@ export interface InvoiceEntryListItem {
     endTime: Date | null;
     createdAt: Date;
     customer: { id: string; name: string; defaultEntryAmount: number };
+    invoiceGroup: { id: string; name: string } | null;
 }
 
 export interface InvoiceEntryInput {
@@ -21,6 +22,7 @@ export interface InvoiceEntryInput {
     amount: number; // hourly rate when timed, otherwise the line total
     startTime: Date | null;
     endTime: Date | null;
+    invoiceGroupId: string | null;
 }
 
 /**
@@ -61,6 +63,7 @@ export function parseInvoiceEntryInput(
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const type = typeof body.type === 'string' ? body.type : 'bill';
     const date = parseDateOnly(body.date);
+    const invoiceGroupId = typeof body.invoiceGroupId === 'string' && body.invoiceGroupId.trim() ? body.invoiceGroupId.trim() : null;
 
     if (!customerId) return { input: null, error: 'A customer is required.' };
     if (!description) return { input: null, error: 'A description is required.' };
@@ -74,12 +77,12 @@ export function parseInvoiceEntryInput(
         if (endTime && endTime <= startTime) return { input: null, error: 'End time must be after start time.' };
         const rate = Number(body.amount);
         if (!Number.isInteger(rate) || rate < 0) return { input: null, error: 'Hourly rate must be a non-negative number of cents.' };
-        return { input: { customerId, description, type, date, quantity: 0, amount: rate, startTime, endTime } };
+        return { input: { customerId, description, type, date, quantity: 0, amount: rate, startTime, endTime, invoiceGroupId } };
     }
 
     const quantity = Number(body.quantity);
     const amount = Number(body.amount);
     if (!Number.isFinite(quantity) || quantity < 0) return { input: null, error: 'Quantity must be a non-negative number.' };
     if (!Number.isInteger(amount) || amount < 0) return { input: null, error: 'Amount must be a non-negative number of cents.' };
-    return { input: { customerId, description, type, date, quantity, amount, startTime: null, endTime: null } };
+    return { input: { customerId, description, type, date, quantity, amount, startTime: null, endTime: null, invoiceGroupId } };
 }
