@@ -61,7 +61,7 @@ npm start
 
 ## Docker
 
-The image is published to Docker Hub at [dmbob/siattu](https://hub.docker.com/r/dmbob/siattu). A new image is pushed automatically on every commit to `main` (tagged `:latest`) and on every `vX.Y.Z` git tag (tagged `:X.Y.Z` and `:X.Y`).
+The image is published to Docker Hub at [dmbob/siattu](https://hub.docker.com/r/dmbob/siattu). A new image is pushed automatically on every `vX.Y.Z` git tag, producing `:latest`, `:X.Y.Z`, and `:X.Y` tags on Docker Hub.
 
 ### Quick start with Docker Compose (recommended)
 

@@ -4,6 +4,7 @@ import { AuthService } from "./lib/service/AuthService";
 import { ServiceProviderService } from "./lib/service/ServiceProviderService";
  
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       name: "Credentials",
