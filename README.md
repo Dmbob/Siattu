@@ -13,6 +13,7 @@ Built with Next.js 16, NextAuth.js, Prisma 7 (SQLite via better-sqlite3), Bootst
 | `DATABASE_URL` | Yes | SQLite connection string, e.g. `file:./data.db` (local) or `file:/data/data.db` (Docker) |
 | `AUTH_SECRET` | Yes | Secret used to sign session JWTs. Generate one with `openssl rand -hex 32` |
 | `NEXTAUTH_URL` | Recommended | Canonical URL of the app, e.g. `http://localhost:3000`. Required for auth callbacks to work correctly behind a reverse proxy. |
+| `SESSION_TIMEOUT_MINUTES` | No | How long a login session lasts, in minutes, before you must sign in again. Defaults to `120` (2 hours). |
 
 ---
 

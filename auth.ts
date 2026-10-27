@@ -2,6 +2,12 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { AuthService } from "./lib/service/AuthService";
 import { ServiceProviderService } from "./lib/service/ServiceProviderService";
+
+// Login session lifetime, configurable via SESSION_TIMEOUT_MINUTES (default 2 hours).
+const DEFAULT_SESSION_TIMEOUT_MINUTES = 120;
+const configuredTimeout = Number(process.env.SESSION_TIMEOUT_MINUTES);
+const sessionTimeoutMinutes =
+  configuredTimeout > 0 ? configuredTimeout : DEFAULT_SESSION_TIMEOUT_MINUTES;
  
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
@@ -47,5 +53,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: sessionTimeoutMinutes * 60,
   }
 })
